@@ -935,16 +935,16 @@ class AppStoreConnectServer {
 
           // Beta Testing
           case "list_beta_groups":
-            return { toolResult: await this.betaHandlers.listBetaGroups(args as any) };
+            return formatResponse(await this.betaHandlers.listBetaGroups(args as any));
           
           case "list_group_testers":
-            return { toolResult: await this.betaHandlers.listGroupTesters(args as any) };
+            return formatResponse(await this.betaHandlers.listGroupTesters(args as any));
           
           case "add_tester_to_group":
-            return { toolResult: await this.betaHandlers.addTesterToGroup(args as any) };
+            return formatResponse(await this.betaHandlers.addTesterToGroup(args as any));
           
           case "remove_tester_from_group":
-            return { toolResult: await this.betaHandlers.removeTesterFromGroup(args as any) };
+            return formatResponse(await this.betaHandlers.removeTesterFromGroup(args as any));
           
           case "list_beta_feedback_screenshots":
             const feedbackData = await this.betaHandlers.listBetaFeedbackScreenshots(args as any);
@@ -961,56 +961,56 @@ class AppStoreConnectServer {
 
           // App Store Version Localizations
           case "create_app_store_version":
-            return { toolResult: await this.localizationHandlers.createAppStoreVersion(args as any) };
+            return formatResponse(await this.localizationHandlers.createAppStoreVersion(args as any));
           
           case "list_app_store_versions":
-            return { toolResult: await this.localizationHandlers.listAppStoreVersions(args as any) };
+            return formatResponse(await this.localizationHandlers.listAppStoreVersions(args as any));
           
           case "list_app_store_version_localizations":
-            return { toolResult: await this.localizationHandlers.listAppStoreVersionLocalizations(args as any) };
+            return formatResponse(await this.localizationHandlers.listAppStoreVersionLocalizations(args as any));
           
           case "get_app_store_version_localization":
-            return { toolResult: await this.localizationHandlers.getAppStoreVersionLocalization(args as any) };
+            return formatResponse(await this.localizationHandlers.getAppStoreVersionLocalization(args as any));
           
           case "update_app_store_version_localization":
-            return { toolResult: await this.localizationHandlers.updateAppStoreVersionLocalization(args as any) };
+            return formatResponse(await this.localizationHandlers.updateAppStoreVersionLocalization(args as any));
 
           // Bundle IDs
           case "create_bundle_id":
-            return { toolResult: await this.bundleHandlers.createBundleId(args as any) };
+            return formatResponse(await this.bundleHandlers.createBundleId(args as any));
           
           case "list_bundle_ids":
-            return { toolResult: await this.bundleHandlers.listBundleIds(args as any) };
+            return formatResponse(await this.bundleHandlers.listBundleIds(args as any));
           
           case "get_bundle_id_info":
-            return { toolResult: await this.bundleHandlers.getBundleIdInfo(args as any) };
+            return formatResponse(await this.bundleHandlers.getBundleIdInfo(args as any));
           
           case "enable_bundle_capability":
-            return { toolResult: await this.bundleHandlers.enableBundleCapability(args as any) };
+            return formatResponse(await this.bundleHandlers.enableBundleCapability(args as any));
           
           case "disable_bundle_capability":
-            return { toolResult: await this.bundleHandlers.disableBundleCapability(args as any) };
+            return formatResponse(await this.bundleHandlers.disableBundleCapability(args as any));
 
           // Devices
           case "list_devices":
-            return { toolResult: await this.deviceHandlers.listDevices(args as any) };
+            return formatResponse(await this.deviceHandlers.listDevices(args as any));
 
           // Users
           case "list_users":
-            return { toolResult: await this.userHandlers.listUsers(args as any) };
+            return formatResponse(await this.userHandlers.listUsers(args as any));
 
           // Analytics & Reports
           case "create_analytics_report_request":
-            return { toolResult: await this.analyticsHandlers.createAnalyticsReportRequest(args as any) };
+            return formatResponse(await this.analyticsHandlers.createAnalyticsReportRequest(args as any));
           
           case "list_analytics_reports":
-            return { toolResult: await this.analyticsHandlers.listAnalyticsReports(args as any) };
+            return formatResponse(await this.analyticsHandlers.listAnalyticsReports(args as any));
           
           case "list_analytics_report_segments":
-            return { toolResult: await this.analyticsHandlers.listAnalyticsReportSegments(args as any) };
+            return formatResponse(await this.analyticsHandlers.listAnalyticsReportSegments(args as any));
           
           case "download_analytics_report_segment":
-            return { toolResult: await this.analyticsHandlers.downloadAnalyticsReportSegment(args as any) };
+            return formatResponse(await this.analyticsHandlers.downloadAnalyticsReportSegment(args as any));
           
           case "download_sales_report":
             if (!config.vendorNumber) {
@@ -1019,7 +1019,7 @@ class AppStoreConnectServer {
                 "Sales reports are not available. Please set APP_STORE_CONNECT_VENDOR_NUMBER environment variable."
               );
             }
-            return { toolResult: await this.analyticsHandlers.downloadSalesReport(args as any) };
+            return formatResponse(await this.analyticsHandlers.downloadSalesReport(args as any));
           
           case "download_finance_report":
             if (!config.vendorNumber) {
@@ -1028,11 +1028,11 @@ class AppStoreConnectServer {
                 "Finance reports are not available. Please set APP_STORE_CONNECT_VENDOR_NUMBER environment variable."
               );
             }
-            return { toolResult: await this.analyticsHandlers.downloadFinanceReport(args as any) };
+            return formatResponse(await this.analyticsHandlers.downloadFinanceReport(args as any));
 
           // Xcode Development Tools
           case "list_schemes":
-            return { toolResult: await this.xcodeHandlers.listSchemes(args as any) };
+            return formatResponse(await this.xcodeHandlers.listSchemes(args as any));
 
           default:
             throw new McpError(
