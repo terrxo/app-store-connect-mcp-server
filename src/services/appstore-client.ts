@@ -53,8 +53,18 @@ export class AppStoreConnectClient {
   }
 
   async downloadFromUrl(url: string): Promise<any> {
+    let parsed: URL;
+    try {
+      parsed = new URL(url);
+    } catch {
+      throw new Error(`Invalid download URL: ${url}`);
+    }
+    if (parsed.protocol !== 'https:' || !/(^|\.)apple\.com$/.test(parsed.hostname)) {
+      throw new Error(`Refusing to send Apple JWT to non-Apple host: ${parsed.hostname}`);
+    }
+
     const token = await this.authService.generateToken();
-    
+
     const response = await axios.get(url, {
       headers: {
         'Authorization': `Bearer ${token}`

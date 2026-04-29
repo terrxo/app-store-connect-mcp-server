@@ -40,6 +40,16 @@ export class AppStoreConnectClient {
         return this.request('PATCH', url, data);
     }
     async downloadFromUrl(url) {
+        let parsed;
+        try {
+            parsed = new URL(url);
+        }
+        catch {
+            throw new Error(`Invalid download URL: ${url}`);
+        }
+        if (parsed.protocol !== 'https:' || !/(^|\.)apple\.com$/.test(parsed.hostname)) {
+            throw new Error(`Refusing to send Apple JWT to non-Apple host: ${parsed.hostname}`);
+        }
         const token = await this.authService.generateToken();
         const response = await axios.get(url, {
             headers: {

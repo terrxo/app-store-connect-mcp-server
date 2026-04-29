@@ -1,7 +1,7 @@
-import { exec } from 'child_process';
+import { execFile } from 'child_process';
 import { promisify } from 'util';
 import { existsSync, statSync } from 'fs';
-const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
 export class XcodeHandlers {
     async listSchemes(args) {
         const { projectPath } = args;
@@ -21,10 +21,10 @@ export class XcodeHandlers {
             throw new Error('Project path must be either a .xcworkspace or .xcodeproj file');
         }
         try {
-            const command = isWorkspace
-                ? `xcodebuild -workspace "${projectPath}" -list`
-                : `xcodebuild -project "${projectPath}" -list`;
-            const { stdout, stderr } = await execAsync(command);
+            const args = isWorkspace
+                ? ['-workspace', projectPath, '-list']
+                : ['-project', projectPath, '-list'];
+            const { stdout, stderr } = await execFileAsync('xcodebuild', args);
             if (stderr && stderr.trim() !== '') {
                 console.error('xcodebuild stderr:', stderr);
             }
