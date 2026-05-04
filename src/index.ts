@@ -12,15 +12,16 @@ import axios from 'axios';
 
 import { AppStoreConnectConfig } from './types/index.js';
 import { AppStoreConnectClient } from './services/index.js';
-import { 
-  AppHandlers, 
-  BetaHandlers, 
-  BundleHandlers, 
-  DeviceHandlers, 
-  UserHandlers, 
+import {
+  AppHandlers,
+  BetaHandlers,
+  BundleHandlers,
+  DeviceHandlers,
+  UserHandlers,
   AnalyticsHandlers,
   XcodeHandlers,
-  LocalizationHandlers 
+  LocalizationHandlers,
+  IapPricingHandlers
 } from './handlers/index.js';
 
 // Load environment variables
@@ -42,6 +43,7 @@ class AppStoreConnectServer {
   private analyticsHandlers: AnalyticsHandlers;
   private xcodeHandlers: XcodeHandlers;
   private localizationHandlers: LocalizationHandlers;
+  private iapPricingHandlers: IapPricingHandlers;
 
   constructor() {
     this.server = new Server({
@@ -62,6 +64,7 @@ class AppStoreConnectServer {
     this.analyticsHandlers = new AnalyticsHandlers(this.client, config);
     this.xcodeHandlers = new XcodeHandlers();
     this.localizationHandlers = new LocalizationHandlers(this.client);
+    this.iapPricingHandlers = new IapPricingHandlers(this.client);
 
     this.setupHandlers();
   }
@@ -827,6 +830,97 @@ class AppStoreConnectServer {
             },
             required: ["projectPath"]
           }
+        },
+
+        // IAP Pricing Tools (V2 API) — read & WRITE territory-specific prices
+        {
+          name: "list_iap_price_points",
+          description: "List Apple's available customer price points for an IAP, filtered by territory and/or specific customerPrice. Used to discover the price-point ID needed when setting prices via set_iap_prices. Each price point is an Apple-precomputed (territory + customerPrice + proceeds) tuple — you must reference its ID, not the raw price.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              iapId: {
+                type: "string",
+                description: "The ID of the in-app purchase (e.g., '854a8a0e-1ebe-4055-92b8-b0532d34ac4a')"
+              },
+              territory: {
+                type: "string",
+                description: "Optional ISO-3 territory code (e.g., 'USA', 'GBR', 'CHE') to filter price points"
+              },
+              customerPrice: {
+                type: "string",
+                description: "Optional customer-facing price as string (e.g., '9.99') to filter for an exact match"
+              },
+              limit: {
+                type: "number",
+                description: "Max number of price points to return. Default 200, max 8000.",
+                minimum: 1,
+                maximum: 8000
+              }
+            },
+            required: ["iapId"]
+          }
+        },
+        {
+          name: "list_iap_price_schedule",
+          description: "Get the current IAP price schedule with manualPrices, automaticPrices, and baseTerritory. Returns null-shaped result if the IAP has no schedule yet. Read-only.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              iapId: {
+                type: "string",
+                description: "The ID of the in-app purchase"
+              }
+            },
+            required: ["iapId"]
+          }
+        },
+        {
+          name: "set_iap_prices",
+          description: "⚠️ WRITES to App Store Connect — REPLACES the IAP's entire price schedule with a new set of manualPrices.\n\nFor each ManualPriceInput, resolves the matching price-point ID by querying Apple's available price points (or uses pricePointId if pre-provided), then POSTs a new schedule. Territories not in manualPrices fall back to auto-tracking from baseTerritory.\n\nUse `dryRun: true` to see the planned payload without writing. ALWAYS run dryRun first when setting prices for the first time.\n\nApple imposes a price-oscillation cooldown — pushing wrong prices is hard to undo immediately. Caller is responsible for confirming the desired prices BEFORE calling without dryRun.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              iapId: {
+                type: "string",
+                description: "The ID of the in-app purchase"
+              },
+              manualPrices: {
+                type: "array",
+                description: "Full list of manual prices. Each entry must specify territory plus EITHER customerPrice (will be looked up) OR pricePointId (pre-resolved).",
+                items: {
+                  type: "object",
+                  properties: {
+                    territory: {
+                      type: "string",
+                      description: "ISO-3 territory code (e.g., 'USA', 'GBR', 'CHE')"
+                    },
+                    customerPrice: {
+                      type: "string",
+                      description: "Customer-facing price as string (e.g., '9.99'). Looked up against price points for the territory."
+                    },
+                    pricePointId: {
+                      type: "string",
+                      description: "Pre-resolved price point ID. Skip lookup. Use this for exact control."
+                    }
+                  },
+                  required: ["territory"]
+                },
+                minItems: 1
+              },
+              baseTerritory: {
+                type: "string",
+                description: "Anchor territory whose price drives auto-tracked territories. Default 'USA'.",
+                default: "USA"
+              },
+              dryRun: {
+                type: "boolean",
+                description: "If true, return the planned payload without POSTing. Recommended for first-time pushes.",
+                default: false
+              }
+            },
+            required: ["iapId", "manualPrices"]
+          }
         }
     ];
 
@@ -1033,6 +1127,16 @@ class AppStoreConnectServer {
           // Xcode Development Tools
           case "list_schemes":
             return formatResponse(await this.xcodeHandlers.listSchemes(args as any));
+
+          // IAP Pricing (V2 API)
+          case "list_iap_price_points":
+            return formatResponse(await this.iapPricingHandlers.listPricePoints(args as any));
+
+          case "list_iap_price_schedule":
+            return formatResponse(await this.iapPricingHandlers.getPriceSchedule(args as any));
+
+          case "set_iap_prices":
+            return formatResponse(await this.iapPricingHandlers.setPrices(args as any));
 
           default:
             throw new McpError(

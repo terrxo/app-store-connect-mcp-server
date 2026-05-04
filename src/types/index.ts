@@ -24,3 +24,6 @@ export * from './screenshots.js';
 
 // Localization types
 export * from './localizations.js';
+
+// IAP pricing types (V2 API)
+export * from './iap-pricing.js';

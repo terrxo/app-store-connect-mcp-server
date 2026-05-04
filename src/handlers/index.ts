@@ -6,3 +6,4 @@ export { UserHandlers } from './users.js';
 export { AnalyticsHandlers } from './analytics.js';
 export { XcodeHandlers } from './xcode.js';
 export { LocalizationHandlers } from './localizations.js';
+export { IapPricingHandlers } from './iap-pricing.js';
