@@ -227,7 +227,8 @@ export class IapPricingHandlers {
       });
     }
 
-    const tempIds = resolvedPrices.map((_, i) => `manual-${i}`);
+    // Apple requires inline-creation local IDs in the format `${local-id}` literally
+    const tempIds = resolvedPrices.map((_, i) => `\${manual-${i}}`);
 
     const included = resolvedPrices.map((rp, i) => ({
       type: 'inAppPurchasePrices',
@@ -285,8 +286,10 @@ export class IapPricingHandlers {
       };
     }
 
+    // Schedule create endpoint is V1 (shared between V1/V2 IAPs); V2 IAPs reference it
+    // via the iapPriceSchedule relationship.
     const response: any = await this.client.post(
-      `${ASC_BASE_V2}/inAppPurchasePriceSchedules`,
+      'https://api.appstoreconnect.apple.com/v1/inAppPurchasePriceSchedules',
       payload
     );
 
